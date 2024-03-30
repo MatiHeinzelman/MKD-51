@@ -1,1 +1,73 @@
-lll
+#include "main.h"
+#include <stdio.h> // Dodane dla funkcji sprintf()
+
+// Prototyp funkcji disptext_led
+void disptext_led(unsigned char *text);
+
+unsigned char xdata LCDBUF[42];
+unsigned char Licznik;
+unsigned char ZM1=2;
+unsigned char xdata POT1_ADC _at_ 0x8006; // POT1 jako wejście ADC
+unsigned char xdata PTSEG _at_ 0X8018;
+unsigned char xdata PTIO _at_ 0x8008;
+unsigned char xdata PTAC _at_ 0x8000;
+sbit P1_6 = P1^6;
+sbit X1 = P1^0; // Przycisk X1 na porcie P1, załóżmy że to pierwszy pin (bit 0)
+
+void main(void) {
+    unsigned int pot_value = 0; // Zdefiniowanie zmiennej pot_value
+   
+    Licznik=0;
+    strncpy(LCDBUF, "      DEMO      ", 16);
+    strncpy(&LCDBUF[16], "      MODE      ", 16);
+    prglcd();
+   
+    while(1) {
+        WAIT_10US(25000U);
+        INWERSJAP1_6();
+        disptext(LCDBUF); // Tutaj wyświetlamy na W-LCD
+       
+        // Odczyt wartości z potencjometra POT1 za pomocą ADC
+        POT1_ADC = 0x00; // Ustawienie kanału ADC na POT1
+        WAIT_10US(50); // Oczekiwanie na ustabilizowanie się sygnału
+        pot_value = POT1_ADC*5UL/255; // Odczyt wartości z ADC
+       
+        // Konwersja wartości potencjometra na tekst i umieszczenie w buforze LCDBUF
+        sprintf(&LCDBUF[16], "POT1 value: %i     ", pot_value);
+       
+        // Wyświetlenie tekstu na wyświetlaczu W-LED
+        disptext_led(LCDBUF); // Zakładając, że jest funkcja disptext_led()
+       
+        // Obsługa diody L8 w zależności od stanu przycisku X1
+        if (X1 == 0) {
+            // Przycisk X1 jest wciśnięty, więc dioda L8 powinna świecić
+            P1_6 = 1;
+        } else {
+            // Przycisk X1 nie jest wciśnięty, więc dioda L8 powinna być zgaszona
+            P1_6 = 0;
+        }
+    }
+}
+
+void INWERSJAP1_6() {
+#ifdef ASM_EXAMPLE
+    INWERSJAP1_6_ASM();
+#else
+    P1_6 = !P1_6;
+#endif
+}
+
+void WAIT_10US(unsigned int wait) {
+#ifdef ASM_EXAMPLE
+    WAIT_10US_ASM(-wait);
+#else
+    wait = (wait * 10UL) / 11UL;
+    while (--wait) _nop_();
+#endif
+}
+
+// Definicja funkcji disptext_led
+void disptext_led(unsigned char *text) {
+    // Kod do wyświetlenia tekstu na wyświetlaczu W-LED
+    // Należy dopasować do specyfiki wyświetlacza W-LED
+}

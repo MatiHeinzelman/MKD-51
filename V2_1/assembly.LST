@@ -1,0 +1,108 @@
+A51 MACRO ASSEMBLER  ASSEMBLY                                                             04/02/2024 17:10:01 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN assembly.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE assembly.a51 SET(SMALL) DEBUG EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;Oznaczenie pamieci
+                       2     ;BIT, CODE, DATA, IDATA, XDATA, NUMBER
+                       3     
+                       4     ;Wejscie
+                       5     ;Arg Number               char, 1-byte ptr       int, 2-byte ptr                long, float
+                                                      generic ptr
+                       6     ;    1                          R7                   R6 & R7                       R4由7   
+                                                        R1由3
+                       7     ;                                             (MSB in R6,LSB in R7)           (MSB in R4,LS
+                             B in R7)      (Mem type in R3, MSB in R2, LSB in R1)
+                       8     ;    2                          R5                   R4 & R5                       R4由7   
+                                                        R1由3
+                       9     ;                                             (MSB in R4,LSB in R5)           (MSB in R4,LS
+                             B in R7)      (Mem type in R3, MSB in R2, LSB in R1)
+                      10     ;    3                          R3                   R2 & R3                     ----------
+                                                        R1由3
+                      11     ;                                             (MSB in R2,LSB in R3)                        
+                                           (Mem type in R3, MSB in R2, LSB in R1)
+                      12     
+                      13     ;Wyjscie
+                      14     ;bit                                 - Carry bit
+                      15     ;char, unsigned char, 1-byte pointer - R7 
+                      16     ;int, unsigned int, 2-byte ptr       - R6 & R7 MSB in R6, LSB in R7. 
+                      17     ;long,  unsigned long                - R4-R7 MSB in R4, LSB in R7. 
+                      18     ;float R4-R7                         - 32-Bit IEEE format. 
+                      19     ;generic pointer                     - R1-R3 Memory type in R3, MSB R2, LSB R1. 
+                      20     
+                      21     ;Upublicznie (udostepnienie na zewnatrz) symbolu zwiazanego z procedura/funkcja (jesli przy
+                             jmuje argumenty wejsciowe, to wymaga uzupelnienia symbolu dodatkowym znakiem "podlogi")
+                      22                     PUBLIC  _WAIT_10US_ASM
+                      23                     PUBLIC  INWERSJAP1_6_ASM
+                      24                     
+                      25     ;Zdefiniowanie segmentu kodu wynikowego                                 
+                      26     PRGSEG  SEGMENT CODE
+----                  27                     RSEG    PRGSEG
+                      28     ;Definicja procedury realizujacej opoznienie czasowe bedace dopelnieniem do wartosci maksym
+                             alnej 16-bitowej
+0000                  29     _WAIT_10US_ASM:
+                      30     ; Odebranie argumentu wejsciowego podanego przy wywolaniu procedury
+0000 8F82             31                     MOV DPL,R7   ;Umieszcza mlodszy bajty argumentu wejsciowego w mlodszym bajc
+                             ie rejestru DPTR (DPL)
+0002 8E83             32                     MOV DPH,R6   ;Umieszcza starszy bajt argumentu wejsciowego w starszym bajci
+                             e rejestru DPTR (DPH)
+                      33     ;Petla opozniajaca wykorzystujaca wartosc rejestru DPTR jako zmienna iteracyjna            
+                                  
+0004                  34     WAIT_U:
+                      35     ; czterokrotne wykonanie instrukcji NOP, implementujce opoznienie 4us w celu zapewnienia op
+                             oznienia rownego 10us dla jednej iteracji petli
+0004 00               36                     NOP
+0005 00               37                     NOP
+0006 00               38                     NOP
+0007 00               39                     NOP
+                      40     ;Zwiekszenie DPTR o jeden
+0008 A3               41                     INC DPTR
+                      42     ;Przeslanie do akumulatora starszego bajtu DPTR-a
+0009 E583             43                     MOV A,DPH
+                      44     ;Wykonanie sumy logicznej miedzy akumulatorenm a mlodszym bajtem DPTR w celu przygotwania a
+                             kumulatora do sprawdzenia czy rejestr DPTR ulegl wyzerowaniu
+A51 MACRO ASSEMBLER  ASSEMBLY                                                             04/02/2024 17:10:01 PAGE     2
+
+000B 4582             45                     ORL A,DPL
+                      46     ;Sprawdzenie niezerowego stanu rejestru DPTR poprzez weryfikacje stanu akumulatora ustalone
+                             go poprzednia instrukcja sumy logicznej
+                      47     ;Wykonanie skoku do kolejnej iteracji petli jesli akumulator jest rozny od zera (oparciu o 
+                             powyzsze instrukcji rowniez jesli DPTR jest rozny od zera)
+000D 70F5             48                     JNZ WAIT_U
+                      49     ;Powrot z procedury             
+000F 22               50                     RET
+                      51     ;Etykieta rozpoczynajaca procedure INWERSJAP1_6_A
+0010                  52     INWERSJAP1_6_ASM:
+                      53     ; Inwersja bitu 6 portu P1, ktory steruje dioda L8
+0010 B296             54             CPL P1.6 
+                      55     ;Powrot z procdury (podprogramu) - skok bezwarunkowy pod adres zapisany na stosie
+0012 22               56             RET
+                      57             
+                      58     ;Dyrektywa asemblera konczaca kod zrodlowy
+                      59             END
+                             
+A51 MACRO ASSEMBLER  ASSEMBLY                                                             04/02/2024 17:10:01 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+DPH. . . . . . . .  D ADDR   0083H   A   
+DPL. . . . . . . .  D ADDR   0082H   A   
+INWERSJAP1_6_ASM .  C ADDR   0010H   R   SEG=PRGSEG
+P1 . . . . . . . .  D ADDR   0090H   A   
+PRGSEG . . . . . .  C SEG    0013H       REL=UNIT
+WAIT_U . . . . . .  C ADDR   0004H   R   SEG=PRGSEG
+_WAIT_10US_ASM . .  C ADDR   0000H   R   SEG=PRGSEG
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

@@ -1,0 +1,108 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/02/2024 18:32:11 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include "main.h"
+   2          #include <stdio.h> // Dodane dla funkcji sprintf()
+   3          
+   4          // Prototyp funkcji disptext_led
+   5          void disptext_led(unsigned char *text);
+   6          
+   7          unsigned char xdata LCDBUF[42];
+   8          unsigned char Licznik;
+   9          unsigned char ZM1 = 2;
+  10          unsigned char xdata POT0_ADC _at_ 0x8005; // POT0 jako wejście ADC
+  11          unsigned char xdata POT1_ADC _at_ 0x8006; // POT1 jako wejście ADC
+  12          unsigned char xdata POT2_ADC _at_ 0x8007; // POT2 jako wejście ADC
+  13          unsigned char xdata PTSEG _at_ 0X8018;
+  14          unsigned char xdata PTIO _at_ 0x8008;
+  15          unsigned char xdata PTAC _at_ 0x8000;
+  16          sbit P1_6 = P1^6;
+  17          
+  18          void main(void) {
+  19   1          unsigned int pot0_value = 0; // Zdefiniowanie zmiennej pot0_value
+  20   1          unsigned int pot1_value = 0; // Zdefiniowanie zmiennej pot1_value
+  21   1          unsigned int pot2_value = 0; // Zdefiniowanie zmiennej pot2_value
+  22   1          unsigned char last_potentiometer = 1; // Zmienna przechowująca informację o ostatnio zmienionym pote
+             -ncjometrze
+  23   1          
+  24   1          Licznik = 0;
+  25   1          prglcd();
+  26   1          
+  27   1          while(1) {
+  28   2              WAIT_10US(25000U);
+  29   2              INWERSJAP1_6();
+  30   2              disptext(LCDBUF); // Tutaj wyświetlamy na W-LCD
+  31   2              
+  32   2              // Odczyt wartości z potencjometra POT0
+  33   2              POT0_ADC = 0x00; // Ustawienie kanału ADC na POT0
+  34   2              WAIT_10US(50); // Oczekiwanie na ustabilizowanie się sygnału
+  35   2              pot0_value = POT0_ADC * 5UL / 255; // Odczyt wartości z ADC
+  36   2              
+  37   2              // Odczyt wartości z potencjometra POT1
+  38   2              POT1_ADC = 0x00; // Ustawienie kanału ADC na POT1
+  39   2              WAIT_10US(50); // Oczekiwanie na ustabilizowanie się sygnału
+  40   2              pot1_value = POT1_ADC * 5UL / 255; // Odczyt wartości z ADC
+  41   2              
+  42   2              // Odczyt wartości z potencjometra POT2
+  43   2              POT2_ADC = 0x00; // Ustawienie kanału ADC na POT2
+  44   2              WAIT_10US(50); // Oczekiwanie na ustabilizowanie się sygnału
+  45   2              pot2_value = POT2_ADC * 5UL / 255; // Odczyt wartości z ADC
+  46   2              
+  47   2              // Sprawdzenie, który potencjometr miał ostatnio zmienioną wartość
+  48   2              if (pot0_value != pot1_value && pot0_value != pot2_value) {
+  49   3                  last_potentiometer = 0; // POT0 miał ostatnio zmienioną wartość
+  50   3              } else if (pot1_value != pot0_value && pot1_value != pot2_value) {
+  51   3                  last_potentiometer = 1; // POT1 miał ostatnio zmienioną wartość
+  52   3              } else {
+  53   3                  last_potentiometer = 2; // POT2 miał ostatnio zmienioną wartość
+  54   3              }
+C51 COMPILER V9.60.7.0   MAIN                                                              04/02/2024 18:32:11 PAGE 2   
+
+  55   2              
+  56   2              // Konwersja wartości potencjometra na tekst i umieszczenie w buforze LCDBUF
+  57   2              if (last_potentiometer == 0) {
+  58   3                  sprintf(&LCDBUF[16], "POT0 value: %i     ", pot0_value);
+  59   3              } else if (last_potentiometer == 1) {
+  60   3                  sprintf(&LCDBUF[16], "POT1 value: %i     ", pot1_value);
+  61   3              } else {
+  62   3                  sprintf(&LCDBUF[16], "POT2 value: %i     ", pot2_value);
+  63   3              }
+  64   2          }
+  65   1      }
+  66          
+  67          void INWERSJAP1_6() {
+  68   1      #ifdef ASM_EXAMPLE
+                  INWERSJAP1_6_ASM();
+              #else
+  71   1          P1_6 = !P1_6;
+  72   1      #endif
+  73   1      }
+  74          
+  75          void WAIT_10US(unsigned int wait) {
+  76   1      #ifdef ASM_EXAMPLE
+                  WAIT_10US_ASM(-wait);
+              #else
+  79   1          wait = (wait * 10UL) / 11UL;
+  80   1          while (--wait) _nop_();
+  81   1      #endif
+  82   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    316    ----
+   CONSTANT SIZE    =     60    ----
+   XDATA SIZE       =     42    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
